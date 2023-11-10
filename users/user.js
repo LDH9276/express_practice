@@ -2,8 +2,11 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const cookieParser = require("cookie-parser");
 
 module.exports = (connection) => {
+    router.use(cookieParser());
+
     router.post("/join", (req, res) => {
         const id = req.body.id;
         const pw = req.body.pw + process.env.APP_HASH_SALT; // salt 추가
@@ -37,7 +40,6 @@ module.exports = (connection) => {
 
             if (rows.length > 0) {
                 if (rows[0].user_password === hashedPw) {
-
                     const payload = {
                         user_id: rows[0].user_id,
                         username: rows[0].user_name,
@@ -47,17 +49,25 @@ module.exports = (connection) => {
                         expiresIn: "1h",
                     };
 
+                    const refreshOptions = {
+                        expiresIn: "3d",
+                    };
+
                     const secret = process.env.APP_SECRET_KEY;
                     const token = jwt.sign(payload, secret, options);
+
+                    const refreshToken = jwt.sign(payload, secret, refreshOptions);
+
+                    res.cookie("refreshToken", refreshToken, { httpOnly: true, maxAge: 259200000 }); // 3 days
 
                     res.send({
                         success: true,
                         message: "로그인 성공",
                         user_id: rows[0].user_id,
-                        name : rows[0].user_name,
+                        name: rows[0].user_name,
                         token: token,
+                        refreshToken: refreshToken,
                     });
-
                 } else {
                     res.send("비밀번호가 일치하지 않습니다");
                 }

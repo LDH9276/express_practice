@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const mysql = require("mysql");
 const crypto = require("crypto");
 require("dotenv").config();
+const cookieParser = require('cookie-parser')
 
 // mysql connection
 const connection = mysql.createConnection({
@@ -22,19 +23,23 @@ const tokenRouter = require("./users/token")(connection);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors({ origin: "http://localhost:5173" })); // vite 로컬 서버 주소
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
+
+
     res.send("Hello World!");
 });
 
-//////////////////////////////////////
-// 1. 회원가입 /users/join (POST)     //
-// 2. 로그인 /users/login (POST)      //
-// 3. 토큰검증 /token (POST)          //
-//////////////////////////////////////
+///////////////////////////////////////
+// 1. 회원가입 /users/join (POST)    //
+// 2. 로그인 /users/login (POST)     //
+// 3. 토큰검증 /token (POST)         //
+///////////////////////////////////////
 
 app.use("/users", userRouter);
 app.use("/token", tokenRouter);
+
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
