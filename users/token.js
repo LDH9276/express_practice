@@ -21,7 +21,7 @@ module.exports = (connection) => {
 
                     const payload = {
                         user_id: decoded.user_id,
-                        username: decoded.username,
+                        username: decoded.user_name,
                     };
 
                     const options = {
@@ -36,15 +36,15 @@ module.exports = (connection) => {
                         type: "refresh",
                         message: "토근 재발급",
                         user_id: userId,
-                        name: userName,
+                        user_name: userName,
                         token: token,
                     });
                 });
             }
 
             // 검증 완료 후 토큰에 담긴 정보 가져오기
-            const userId   = decoded.id;
-            const userName = decoded.name;
+            const userId   = decoded.user_id;
+            const userName = decoded.user_name;
 
             // 검증 완료 후 전송
             res.send({
@@ -52,7 +52,7 @@ module.exports = (connection) => {
                 type: "verify",
                 message: "검증성공",
                 user_id: userId,
-                name: userName,
+                user_name: userName,
             });
         });
     });
