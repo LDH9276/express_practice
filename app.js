@@ -25,7 +25,7 @@ const imgUploadRouter = require("./board/upload")(connection);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(cors({ origin: "http://localhost:5173" })); // vite 로컬 서버 주소
+app.use(cors({ origin: "*" })); // vite 로컬 서버 주소
 
 app.get("/", (req, res) => {
     res.send("Hello World!");

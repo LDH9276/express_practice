@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const upload = multer();
 
 module.exports = (connection) => {
     
@@ -10,7 +12,7 @@ module.exports = (connection) => {
 
         const limit = 10;
         const offset = (page - 1) * limit;
-        connection.query("SELECT * FROM board LIMIT ?, ?", [offset, limit], (err, rows, fields) => {
+        connection.query("SELECT * FROM question LIMIT ?, ?", [offset, limit], (err, rows, fields) => {
             if (err) throw err;
             res.send(rows);
         });
@@ -21,24 +23,51 @@ module.exports = (connection) => {
         const postID = req.params.postID;
         if(isNaN(postID)) return res.status(400).send("잘못된 요청입니다.");
 
-        connection.query("SELECT * FROM board WHERE postID = ?", [postID], (err, rows, fields) => {
+        connection.query("SELECT * FROM question WHERE id = ?", [postID], (err, rows, fields) => {
             if (err) throw err;
             res.send(rows);
         });
     });
 
-    // 게시판 글 상세 조회
-    router.post("/write", (req, res) => {
+    router.post("/question", upload.none(), (req, res) => {
         const title = req.body.title;
         const content = req.body.content;
         const writer = req.body.writer;
+        const files = req.body.files;
 
         if(!title || !content || !writer) return res.status(400).send("잘못된 요청입니다.");
 
-        connection.query("INSERT INTO question (title, content, writer) VALUES (?, ?, ?)", [title, content, writer], (err, rows, fields) => {
+        connection.query("INSERT INTO question (name, content, writer, files) VALUES (?, ?, ?, ?)", [title, content, writer, files], (err, rows, fields) => {
             if (err) throw err;
             res.send(rows);
         });
+    });
+
+    router.post("/answer", upload.none(), async (req, res) => {
+        const question_id = req.body.question_id;
+        const content = req.body.content;
+    
+        if(!question_id || !content) return res.status(400).send("잘못된 요청입니다.");
+    
+        try {
+            await new Promise((resolve, reject) => {
+                connection.query("INSERT INTO answer (question_id, content) VALUES (?, ?)", [question_id, content], (err, rows, fields) => {
+                    if (err) reject(err);
+                    resolve(rows);
+                });
+            });
+    
+            const rows = await new Promise((resolve, reject) => {
+                connection.query("UPDATE question SET is_solved = 1 WHERE id = ?", [question_id], (err, rows, fields) => {
+                    if (err) reject(err);
+                    resolve(rows);
+                });
+            });
+    
+            res.send(rows);
+        } catch (err) {
+            throw err;
+        }
     });
 
     // 게시판 글 수정
@@ -50,7 +79,7 @@ module.exports = (connection) => {
 
         if(!postID || !title || !content || !writer) return res.status(400).send("잘못된 요청입니다.");
 
-        connection.query("UPDATE board SET title = ?, content = ?, writer = ? WHERE postID = ?", [title, content, writer, postID], (err, rows, fields) => {
+        connection.query("UPDATE answer SET name = ?, content = ?, writer = ? WHERE id = ?", [title, content, writer, postID], (err, rows, fields) => {
             if (err) throw err;
             res.send(rows);
         });
@@ -62,7 +91,7 @@ module.exports = (connection) => {
 
         if(!postID) return res.status(400).send("잘못된 요청입니다.");
 
-        connection.query("UPDATE is_deleted FROM board WHERE postID = ?", [postID], (err, rows, fields) => {
+        connection.query("UPDATE is_deleted FROM board WHERE id = ?", [postID], (err, rows, fields) => {
             if (err) throw err;
             res.send(rows);
         });
