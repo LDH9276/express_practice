@@ -33,6 +33,12 @@ module.exports = (connection) => {
         const title = req.body.title;
         const content = req.body.content;
         const writer = req.body.writer;
+
+        connection.query("SELECT * FROM member WHERE id = ?", [writer], (err, rows, fields) => {
+            if (err) throw err;
+            if(rows.length === 0) return res.status(400).send("잘못된 요청입니다.");
+        });
+
         const files = req.body.files;
 
         if(!title || !content || !writer) return res.status(400).send("잘못된 요청입니다.");
@@ -47,6 +53,12 @@ module.exports = (connection) => {
         const question_id = req.body.question_id;
         const content = req.body.content;
     
+        connection.query("SELECT * FROM member WHERE id = ?", [writer], (err, rows, fields) => {
+            if (err) throw err;
+            if(rows.length === 0) return res.status(400).send("잘못된 요청입니다.");
+        });
+
+        
         if(!question_id || !content) return res.status(400).send("잘못된 요청입니다.");
     
         try {
